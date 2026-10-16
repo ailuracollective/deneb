@@ -5,10 +5,7 @@
   "buildCommand": "pnpm run build",
   "functions": {
     "src/main.ts": {
-      "includeFiles": [
-        "views/**",
-        "public/**"
-      ]
+      "includeFiles": "{views,public}/**"
     }
   }
 }
