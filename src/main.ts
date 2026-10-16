@@ -51,13 +51,23 @@ const document = SwaggerModule.createDocument(app, config);
 
 const hono = adapter.getHono();
 hono.get('/api-json', (context) => context.json(document));
-app.use(
-  '/api',
-  apiReference({
-    content: document,
-    pageTitle: 'Swagger Deneb - OpenAPI 3.0',
-  }),
-);
+
+const scalarHandler = apiReference({
+  content: document,
+  pageTitle: 'Swagger Deneb - OpenAPI 3.0',
+});
+
+const renderScalar = (context: any) => {
+  let html = '';
+  scalarHandler({} as never, {
+    send: (value: string) => {
+      html = value;
+    },
+  } as never);
+  return context.html(html);
+};
+hono.get('/api', renderScalar);
+hono.get('/api/', renderScalar);
 
 await app.init();
 
