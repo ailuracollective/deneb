@@ -1,26 +1,66 @@
-import { Logger } from '@nestjs/common';
+import 'reflect-metadata';
+
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+  ServerAdapter,
+  type NestHonoApplication,
+} from '@ailura/nestjs-hono-adapter';
+import {
+  fetchHandler,
+  fetchServer,
+} from '@ailura/nestjs-hono-adapter/fetch';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
+import handlebars from 'handlebars';
 import { AppModule } from './app.module.js';
-import { configureApp } from './configure-app.js';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
-  await configureApp(app);
-  app.enableShutdownHooks();
-
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  Logger.log(`Deneb API is running on port ${port}`, 'Bootstrap');
-}
-
-bootstrap().catch((error: unknown) => {
-  Logger.error(error, 'Bootstrap');
-  process.exit(1);
+const adapter = new ServerAdapter({
+  transport: fetchServer(),
+  trustProxy: true,
+  views: {
+    directory: 'views',
+    engine: (source: string, data: unknown) =>
+      handlebars.compile(source)(data as Record<string, unknown>),
+  },
 });
+
+const app = await NestFactory.create<NestHonoApplication>(AppModule, adapter, {
+  logger: ['error', 'warn'],
+});
+
+app.enableCors();
+app.useGlobalPipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+  }),
+);
+
+const config = new DocumentBuilder()
+  .setTitle('Swagger Deneb - OpenAPI 3.0')
+  .setDescription(
+    'API-REST that allows calculating a measure of performance in M/M/1, M/M/K, M/M/1/M/M and M/M/K/M/M models',
+  )
+  .setVersion('1.0.2')
+  .addServer('https://deneb.vercel.app', 'Server Deneb')
+  .addTag('simulations', 'Queue model performance measures and costs')
+  .build();
+
+const document = SwaggerModule.createDocument(app, config);
+
+const hono = adapter.getHono();
+hono.get('/api-json', (context) => context.json(document));
+app.use(
+  '/api',
+  apiReference({
+    content: document,
+    pageTitle: 'Swagger Deneb - OpenAPI 3.0',
+  }),
+);
+
+await app.init();
+
+export default {
+  fetch: fetchHandler(hono),
+};

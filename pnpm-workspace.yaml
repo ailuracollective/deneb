@@ -1,0 +1,5 @@
+allowBuilds:
+  '@scarf/scarf': true
+  '@swc/core': true
+minimumReleaseAgeExclude:
+  - '@ailura/nestjs-hono-adapter@2.0.1'

@@ -1,39 +1,120 @@
-## Description
+# Deneb API
 
-Deneb is an API tool designed to address problems related to queuing theories. Its REST API provides an accessible solution to integrate into projects through the following URL: https://deneb.vercel.app/api/v1/simulations. For a more detailed exploration of the API and to understand the parameters that must be included in URL requests, it is recommended to consult the page https://deneb.vercel.app/api, where a Swagger interface is available that allows testing and become familiar with the data that must be sent in the applications.
+API REST para calcular medidas de rendimiento en modelos de colas M/M/1, M/M/K, M/M/1/M/M y M/M/K/M/M.
 
-## Installation
+## Tecnologías
+
+- **Framework**: NestJS 12
+- **Servidor HTTP**: Hono (vía @ailura/nestjs-hono-adapter)
+- **Runtime**: Node.js 24+ o Bun 1.2+
+- **Lenguaje**: TypeScript
+
+## Descripción
+
+Deneb es una herramienta API diseñada para abordar problemas relacionados con teorías de colas. Su API REST proporciona una solución accesible para integrar en proyectos a través de la siguiente URL: https://deneb.vercel.app/api/v1/simulations.
+
+Para una exploración más detallada de la API y entender los parámetros que deben incluirse en las solicitudes, se recomienda consultar la página https://deneb.vercel.app/api/ui, donde está disponible una interfaz Swagger que permite probar y familiarizarse con los datos que deben enviarse en las aplicaciones.
+
+## Requisitos
+
+- Node.js 24.x o Bun 1.2+
+- pnpm o bun (gestor de paquetes)
+
+## Instalación
 
 ```bash
-$ pnpm install
+# Con bun (recomendado)
+bun install
+
+# Con pnpm
+pnpm install
 ```
 
-## Running the app
+## Desarrollo
 
 ```bash
-# development
-$ pnpm run start
+# Con bun (recomendado) - más rápido
+bun run start:bun
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Con pnpm/Node
+pnpm run start:dev
 ```
 
-## Test
+## Producción
 
 ```bash
-# unit tests
-$ pnpm run test
+# Build
+bun run build
 
-# e2e tests
-$ pnpm run test:e2e
+# Ejecutar con bun
+bun run start:bun:prod
 
-# test coverage
-$ pnpm run test:cov
+# Ejecutar con Node
+pnpm run start:prod
 ```
 
-## License
+## Scripts Disponibles
 
-Deneb is [MIT licensed](LICENSE).
+| Script | Descripción |
+|--------|-------------|
+| `start:bun` | Desarrollo con Bun y hot-reload |
+| `start:dev` | Desarrollo con Node y hot-reload |
+| `build` | Compilar para producción |
+| `start:bun:prod` | Producción con Bun |
+| `start:prod` | Producción con Node |
+| `test` | Ejecutar tests |
+| `lint` | Linter con auto-fix |
+
+## Endpoints
+
+- `GET /` - Vista principal
+- `GET /api/v1/simulations` - Calcular medidas de rendimiento
+- `GET /api` - Documentación Swagger (JSON)
+- `GET /api/ui` - Interfaz Swagger UI
+- `GET /public/` - Archivos estáticos
+
+## Despliegue
+
+### Vercel
+
+El proyecto está configurado para desplegar en Vercel con Node.js:
+
+```bash
+vercel deploy
+```
+
+### Bun (Desarrollo local)
+
+Para desarrollo local con Bun:
+
+```bash
+bun run start:bun
+```
+
+## Estructura del Proyecto
+
+```
+src/
+├── main.ts                 # Punto de entrada
+├── configure-app.ts        # Configuración de la aplicación
+├── app.module.ts           # Módulo raíz
+├── app.controller.ts       # Controlador raíz
+├── app.service.ts          # Servicio raíz
+└── simulations/            # Módulo de simulaciones
+    ├── simulations.controller.ts
+    ├── simulations.service.ts
+    ├── simulations.module.ts
+    ├── dto/
+    │   ├── simulation.dto.ts
+    │   └── simulation-response.dto.ts
+    └── entities/
+        └── simulation.entity.ts
+```
+
+## Notas de la Migración
+
+Este proyecto fue migrado de Fastify a Hono usando [@ailura/nestjs-hono-adapter](https://github.com/ailuracollective/nestjs-hono-adapter). Ver la documentación del adaptador para más detalles sobre diferencias de comportamiento.
+
+## Licencia
+
+Deneb está [MIT licensed](LICENSE).
