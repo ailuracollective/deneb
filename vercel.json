@@ -2,10 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm run build",
-  "functions": {
-    "src/main.ts": {
-      "includeFiles": "{views,public}/**"
-    }
-  }
+  "buildCommand": "pnpm run build"
 }
