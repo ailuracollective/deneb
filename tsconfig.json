@@ -12,12 +12,17 @@
     "importHelpers": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
+    "paths": {
+      "@/*": ["./inertia/app/*"]
+    },
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
+    "typeRoots": ["./node_modules/@types", "./node_modules"],
     "types": ["vitest/globals", "node"]
-  }
+  },
+  "exclude": ["inertia", "node_modules", "dist"]
 }

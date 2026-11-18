@@ -1,4 +1,5 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
+import { Inertia } from '@dudousxd/nestjs-inertia';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { AppService } from './app.service.js';
 import type { RootView } from './app.service.js';
@@ -9,7 +10,7 @@ export class AppController {
 
   @Get()
   @ApiExcludeEndpoint()
-  @Render('index.hbs')
+  @Inertia('Simulations/Index')
   root(): RootView {
     return this.appService.getRootView();
   }

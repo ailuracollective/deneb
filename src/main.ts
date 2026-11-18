@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import '@ailura/nestjs-platform-hono-inertia/register';
 
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -6,23 +7,14 @@ import {
   ServerAdapter,
   type NestHonoApplication,
 } from '@ailura/nestjs-hono-adapter';
-import {
-  fetchHandler,
-  fetchServer,
-} from '@ailura/nestjs-hono-adapter/fetch';
+import { fetchHandler, fetchServer } from '@ailura/nestjs-hono-adapter/fetch';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import handlebars from 'handlebars';
 import { AppModule } from './app.module.js';
 
 const adapter = new ServerAdapter({
   transport: fetchServer(),
   trustProxy: true,
-  views: {
-    directory: 'views',
-    engine: (source: string, data: unknown) =>
-      handlebars.compile(source)(data as Record<string, unknown>),
-  },
 });
 
 const app = await NestFactory.create<NestHonoApplication>(AppModule, adapter, {
@@ -30,6 +22,11 @@ const app = await NestFactory.create<NestHonoApplication>(AppModule, adapter, {
 });
 
 app.enableCors();
+app.useStaticAssets('dist/inertia/client/assets', {
+  prefix: '/assets/',
+  maxAge: '1y',
+  immutable: true,
+});
 app.useGlobalPipes(
   new ValidationPipe({
     transform: true,
@@ -59,11 +56,14 @@ const scalarHandler = apiReference({
 
 const renderScalar = (context: any) => {
   let html = '';
-  scalarHandler({} as never, {
-    send: (value: string) => {
-      html = value;
-    },
-  } as never);
+  scalarHandler(
+    {} as never,
+    {
+      send: (value: string) => {
+        html = value;
+      },
+    } as never,
+  );
   return context.html(html);
 };
 hono.get('/api', renderScalar);
