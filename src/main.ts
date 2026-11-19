@@ -15,6 +15,8 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './api/app.module.js';
 
 const isServerless = Boolean(process.env.VERCEL);
+// Vercel copies dist/ contents to the function root; locally they stay under dist/.
+const dist = isServerless ? '' : 'dist/';
 
 const adapter = new ServerAdapter({
   transport: isServerless ? fetchServer({ serveStatic }) : nodeServer(),
@@ -28,9 +30,32 @@ if (!isServerless && process.env.NODE_ENV !== 'production') {
   // that poisoned module instead of fetching the current one.
   app.use((request: any, _response: any, next: () => void) => {
     delete request.headers['if-none-match'];
+    // The published adapter exposes these as getters, but Vite rewrites them.
+    for (const key of ['originalUrl', 'url']) {
+      Object.defineProperty(request, key, {
+        value: request[key],
+        writable: true,
+        configurable: true,
+      });
+    }
     next();
   });
   const { setupInertiaVite } = await import('@dudousxd/nestjs-inertia-vite');
+  // The published inertia bridge drops the body in end(), so Vite modules answer 200 empty.
+  adapter
+    .getHono()
+    .use('*', async (context: any, next: () => Promise<void>) => {
+      const fittedEnd = context.end;
+      if (typeof fittedEnd === 'function') {
+        context.end = (chunk?: unknown) => {
+          const send = context.send;
+          return typeof send === 'function'
+            ? Reflect.apply(send, context, [chunk])
+            : Reflect.apply(fittedEnd, context, [chunk]);
+        };
+      }
+      await next();
+    });
   await setupInertiaVite(app, {
     mode: 'development',
     root: 'src/web',
@@ -40,7 +65,7 @@ if (!isServerless && process.env.NODE_ENV !== 'production') {
 }
 
 app.enableCors();
-app.useStaticAssets('dist/inertia/client/assets', {
+app.useStaticAssets(`${dist}inertia/client/assets`, {
   prefix: '/assets',
 });
 app.useGlobalPipes(
