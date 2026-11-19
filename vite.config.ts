@@ -4,6 +4,8 @@ import { nestInertia } from '@dudousxd/nestjs-inertia-vite';
 import { defineConfig } from 'vite';
 
 const webRoot = path.resolve(process.cwd(), 'src/web');
+// nestInertia hardcodes 24679; derive it from PORT so parallel dev servers don't collide.
+const hmrPort = Number(process.env.PORT ?? 3000) + 20000;
 
 export default defineConfig({
   root: webRoot,
@@ -15,6 +17,12 @@ export default defineConfig({
       alias: { '@': path.resolve(webRoot, 'app') },
     }),
     tailwindcss(),
+    {
+      name: 'deneb-hmr-port',
+      configResolved(config) {
+        config.server.ws = { ...config.server.ws, port: hmrPort };
+      },
+    },
   ],
   resolve: {
     alias: {

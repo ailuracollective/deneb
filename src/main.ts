@@ -41,18 +41,19 @@ if (!isServerless && process.env.NODE_ENV !== 'production') {
     next();
   });
   const { setupInertiaVite } = await import('@dudousxd/nestjs-inertia-vite');
-  // The published inertia bridge drops the body in end(), so Vite modules answer 200 empty.
+  // The published adapter lacks the Express surface Vite needs: fitted end() drops streamed
+  // chunks and the response proxy has no emit(), so piping a font crashes the dev server.
   adapter
     .getHono()
     .use('*', async (context: any, next: () => Promise<void>) => {
-      const fittedEnd = context.end;
-      if (typeof fittedEnd === 'function') {
-        context.end = (chunk?: unknown) => {
-          const send = context.send;
-          return typeof send === 'function'
-            ? Reflect.apply(send, context, [chunk])
-            : Reflect.apply(fittedEnd, context, [chunk]);
-        };
+      if (Object.hasOwn(context, 'end')) delete context.end;
+      const outgoing = context.env?.outgoing;
+      if (outgoing && typeof outgoing.emit === 'function') {
+        Object.defineProperty(context, 'emit', {
+          value: (event: string, ...args: unknown[]) =>
+            outgoing.emit(event, ...args),
+          configurable: true,
+        });
       }
       await next();
     });
