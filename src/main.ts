@@ -111,23 +111,28 @@ hono.get('/api', renderScalar);
 hono.get('/api/', renderScalar);
 
 if (process.env.VERCEL) {
-  const { Context } = await import('hono');
-  const descriptor = Object.getOwnPropertyDescriptor(Context.prototype, 'res');
-  if (descriptor?.get && descriptor.set) {
-    Object.defineProperty(Context.prototype, 'res', {
-      configurable: true,
-      get: descriptor.get,
-      set(this: unknown, value: Response | undefined) {
-        console.log(
-          '[resset]',
-          value?.status,
-          value?.body === null ? 'null' : 'body',
-          new Error().stack?.split('\n').slice(2, 4).join(' | '),
-        );
-        descriptor.set?.call(this, value);
-      },
-    });
-  }
+  const PATCHED = Symbol('resProbe');
+  hono.use('*', async (context: any, next: () => Promise<void>) => {
+    const proto = Object.getPrototypeOf(context);
+    const descriptor = Object.getOwnPropertyDescriptor(proto, 'res');
+    if (descriptor?.get && descriptor.set && !Reflect.get(proto, PATCHED)) {
+      Reflect.set(proto, PATCHED, true);
+      Object.defineProperty(proto, 'res', {
+        configurable: true,
+        get: descriptor.get,
+        set(this: unknown, value: Response | undefined) {
+          console.log(
+            '[resset]',
+            value?.status,
+            value?.body === null ? 'null' : 'body',
+            new Error().stack?.split('\n').slice(2, 4).join(' | '),
+          );
+          descriptor.set?.call(this, value);
+        },
+      });
+    }
+    await next();
+  });
 }
 
 const baseFetch = fetchHandler(hono);
