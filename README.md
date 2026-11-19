@@ -38,21 +38,7 @@ pnpm run start:dev
 
 Los cambios en `src/web/**` se reflejan solos en el navegador. En producción (`build` / `start` / `start:prod`) no se monta middleware y los assets se sirven desde el manifiesto generado.
 
-Deneb usa dos builds locales del repositorio `../nestjs-hono-adapter` (no los publicados):
-
-- `packages/core`: `req.url` / `req.originalUrl` deben ser grabables porque Vite los reescribe al montar middleware.
-- `packages/inertia`: el `res.end` que instala el bridge debe reenviar el cuerpo a `send`; si no, los módulos de Vite responden `200` con el cuerpo vacío y la consola del navegador da error.
-
-Tras editar cualquiera de los dos:
-
-```bash
-cd ../nestjs-hono-adapter/packages/core && bun pm pack --destination . && cd ../../../deneb
-pnpm add file:../nestjs-hono-adapter/packages/core/ailura-nestjs-hono-adapter-2.2.0.tgz
-
-cd ../nestjs-hono-adapter/packages/inertia && bun pm pack --destination . && cd ../../../deneb
-pnpm add file:../nestjs-hono-adapter/packages/inertia/ailura-nestjs-platform-hono-inertia-0.2.0.tgz
-pnpm run build
-```
+Deneb consume `@ailura/nestjs-hono-adapter` y `@ailura/nestjs-platform-hono-inertia` desde npm, para que el build funcione también en Vercel sin depender de tarballs locales.
 
 ## Producción
 

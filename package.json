@@ -27,8 +27,8 @@
     "test:e2e": "vite build && vitest run --config ./test/vitest-e2e.config.mts"
   },
   "dependencies": {
-    "@ailura/nestjs-hono-adapter": "file:../nestjs-hono-adapter/packages/core/ailura-nestjs-hono-adapter-2.2.0.tgz",
-    "@ailura/nestjs-platform-hono-inertia": "file:../nestjs-hono-adapter/packages/inertia/ailura-nestjs-platform-hono-inertia-0.2.0.tgz",
+    "@ailura/nestjs-hono-adapter": "^2.2.0",
+    "@ailura/nestjs-platform-hono-inertia": "^0.2.0",
     "@base-ui/react": "^1.9.0",
     "@dudousxd/nestjs-inertia": "^3.0.1",
     "@dudousxd/nestjs-inertia-vite": "3.0.1",
