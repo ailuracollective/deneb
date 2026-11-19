@@ -3,6 +3,7 @@
 /node_modules
 /.vscode
 *.tsbuildinfo
+/.atl
 
 # Logs
 logs
@@ -19,6 +20,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/.vitest
 
 # IDEs and editors
 /.idea

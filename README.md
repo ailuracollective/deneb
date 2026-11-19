@@ -30,21 +30,29 @@ pnpm install
 
 ## Desarrollo
 
-El cliente se compila con Vite y el servidor NestJS carga sus archivos mediante el manifiesto generado. Abre dos terminales y ejecuta primero la compilación del cliente en modo watch:
+Un solo comando: `setupInertiaVite` monta el middleware de Vite dentro de NestJS, así que HMR y React Fast Refresh salen del mismo puerto 3000:
 
 ```bash
-# Terminal 1: compilar y observar el cliente
-pnpm run dev:client
-```
-
-Después, con el primer proceso todavía activo, inicia el servidor:
-
-```bash
-# Terminal 2: iniciar y observar NestJS
 pnpm run start:dev
 ```
 
-Los scripts `start`, `start:dev`, `start:debug` y `start:prod` establecen `NODE_ENV=production`; por eso el servidor utiliza el manifiesto de Vite incluso durante el desarrollo local. No detengas `dev:client` mientras trabajas en la interfaz.
+Los cambios en `src/web/**` se reflejan solos en el navegador. En producción (`build` / `start` / `start:prod`) no se monta middleware y los assets se sirven desde el manifiesto generado.
+
+Deneb usa dos builds locales del repositorio `../nestjs-hono-adapter` (no los publicados):
+
+- `packages/core`: `req.url` / `req.originalUrl` deben ser grabables porque Vite los reescribe al montar middleware.
+- `packages/inertia`: el `res.end` que instala el bridge debe reenviar el cuerpo a `send`; si no, los módulos de Vite responden `200` con el cuerpo vacío y la consola del navegador da error.
+
+Tras editar cualquiera de los dos:
+
+```bash
+cd ../nestjs-hono-adapter/packages/core && bun pm pack --destination . && cd ../../../deneb
+pnpm add file:../nestjs-hono-adapter/packages/core/ailura-nestjs-hono-adapter-2.2.0.tgz
+
+cd ../nestjs-hono-adapter/packages/inertia && bun pm pack --destination . && cd ../../../deneb
+pnpm add file:../nestjs-hono-adapter/packages/inertia/ailura-nestjs-platform-hono-inertia-0.2.0.tgz
+pnpm run build
+```
 
 ## Producción
 
@@ -61,9 +69,8 @@ pnpm run start:prod
 |--------|-------------|
 | `build` | Compilar el cliente con Vite y el servidor con NestJS |
 | `build:client` | Generar una compilación de producción del cliente |
-| `dev:client` | Compilar el cliente y observar cambios |
-| `start:dev` | Iniciar NestJS en modo watch con el manifiesto de Vite |
-| `typecheck:client` | Comprobar los tipos del cliente sin emitir archivos |
+| `start:dev` | Iniciar NestJS en modo watch con HMR de Vite en el mismo puerto |
+| `typecheck` | Comprobar los tipos de todo el proyecto (servidor y cliente) sin emitir archivos |
 | `test` | Ejecutar las pruebas del servidor y del cliente |
 | `test:e2e` | Compilar el cliente y ejecutar las pruebas end-to-end de Hono/Inertia |
 
@@ -78,14 +85,16 @@ pnpm run start:prod
 
 ```text
 src/
-├── main.ts                 # Punto de entrada y configuración HTTP/OpenAPI
-├── app.module.ts           # Módulo raíz e integración de Inertia
-├── app.controller.ts       # Página Inertia principal
-├── app.service.ts          # Propiedades de la página principal
-└── simulations/            # API y dominio de simulaciones
-inertia/
-├── app/                    # Entrada del cliente, componentes y tipos
-└── pages/Simulations/      # Consola React y sus pruebas
+├── api/
+│   ├── main.ts             # Punto de entrada y configuración HTTP/OpenAPI
+│   ├── app.module.ts       # Módulo raíz e integración de Inertia
+│   ├── app.controller.ts   # Página Inertia principal
+│   ├── app.service.ts      # Propiedades de la página principal
+│   └── simulations/        # API y dominio de simulaciones
+└── web/
+    ├── app/                # Entrada del cliente, componentes y tipos
+    ├── pages/Simulations/  # Consola React y sus pruebas
+    └── root.html           # Plantilla raíz de Inertia
 test/
 └── app.e2e-spec.ts         # Prueba Hono/Inertia de extremo a extremo
 ```

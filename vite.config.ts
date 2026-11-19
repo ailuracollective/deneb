@@ -1,16 +1,24 @@
 import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import { nestInertia } from '@dudousxd/nestjs-inertia-vite';
 import { defineConfig } from 'vite';
 
-const inertiaRoot = path.resolve(process.cwd(), 'inertia');
+const webRoot = path.resolve(process.cwd(), 'src/web');
 
 export default defineConfig({
-  root: inertiaRoot,
-  plugins: [react(), tailwindcss()],
+  root: webRoot,
+  plugins: [
+    nestInertia({
+      react: true,
+      root: 'src/web',
+      entry: 'src/web/app/client.tsx',
+      alias: { '@': path.resolve(webRoot, 'app') },
+    }),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
-      '@': path.resolve(inertiaRoot, 'app'),
+      '@': path.resolve(webRoot, 'app'),
     },
   },
   build: {
@@ -18,7 +26,7 @@ export default defineConfig({
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
-      input: path.resolve(inertiaRoot, 'app/client.tsx'),
+      input: path.resolve(webRoot, 'app/client.tsx'),
     },
   },
 });

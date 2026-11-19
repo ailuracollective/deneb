@@ -1,28 +1,22 @@
 {
+  // NestJS API (default config): dev + typecheck. Emit settings live in tsconfig.api.json.
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2023",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
-    "paths": {
-      "@/*": ["./inertia/app/*"]
-    },
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
-    "skipLibCheck": true,
-    "strict": true,
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types", "./node_modules"],
     "types": ["vitest/globals", "node"]
   },
-  "exclude": ["inertia", "node_modules", "dist"]
+  "exclude": ["src/web", "node_modules", "dist"]
 }

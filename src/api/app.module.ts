@@ -7,7 +7,7 @@ import { SimulationsModule } from './simulations/simulations.module.js';
 @Module({
   imports: [
     InertiaModule.forRoot({
-      rootView: 'inertia/root.html',
+      rootView: 'src/web/root.html',
       vite: {
         entry: 'app/client.tsx',
         manifestPath: 'dist/inertia/client/.vite/manifest.json',
