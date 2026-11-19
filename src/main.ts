@@ -110,11 +110,14 @@ const renderScalar = (context: any) => {
 hono.get('/api', renderScalar);
 hono.get('/api/', renderScalar);
 
+let probeSeq = 0;
+
 if (process.env.VERCEL) {
   const originalReply = adapter.reply.bind(adapter);
   adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
     console.log(
       '[reply]',
+      probeSeq++,
       response?.req?.path,
       response?.finalized,
       typeof body,
@@ -133,6 +136,7 @@ if (process.env.VERCEL) {
         realSend = (body: unknown) => {
           console.log(
             '[send]',
+            probeSeq++,
             context.req.path,
             typeof body,
             typeof body === 'string' ? body.length : -1,
@@ -152,6 +156,7 @@ if (process.env.VERCEL) {
         set(this: unknown, value: Response | undefined) {
           console.log(
             '[resset]',
+            probeSeq++,
             context.req.path,
             value?.status,
             value?.body === null ? 'null' : 'body',
@@ -173,6 +178,7 @@ const fetch = async (request: Request) => {
     const body = await response.clone().text();
     console.log(
       '[final]',
+      probeSeq++,
       new URL(request.url).pathname,
       response.status,
       body.length,
