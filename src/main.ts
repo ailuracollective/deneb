@@ -9,9 +9,8 @@ import {
 } from '@ailura/nestjs-hono-adapter';
 import { fetchHandler } from '@ailura/nestjs-hono-adapter/fetch';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './api/app.module.js';
-import { createTransport, isVercel } from './bootstrap.js';
+import { createTransport, isVercel, registerScalar } from './bootstrap.js';
 
 const adapter = new ServerAdapter({
   transport: createTransport(),
@@ -45,26 +44,7 @@ const document = SwaggerModule.createDocument(app, config);
 
 const hono = adapter.getHono();
 hono.get('/api-json', (context) => context.json(document));
-
-const scalarHandler = apiReference({
-  content: document,
-  pageTitle: 'Swagger Deneb - OpenAPI 3.0',
-});
-
-const renderScalar = (context: any) => {
-  let html = '';
-  scalarHandler(
-    {} as never,
-    {
-      send: (value: string) => {
-        html = value;
-      },
-    } as never,
-  );
-  return context.html(html);
-};
-hono.get('/api', renderScalar);
-hono.get('/api/', renderScalar);
+registerScalar(hono, document);
 
 const fetch = fetchHandler(hono);
 
