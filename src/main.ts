@@ -114,6 +114,21 @@ const hono = adapter.getHono();
 
 if (process.env.VERCEL) {
   hono.use('*', async (context: any, next: () => Promise<void>) => {
+    let realSend: any;
+    Object.defineProperty(context, 'send', {
+      configurable: true,
+      get: () => realSend,
+      set: (fn: any) => {
+        realSend = (body: unknown) => {
+          console.log(
+            '[dbg6] send',
+            typeof body,
+            typeof body === 'string' ? body.length : -1,
+          );
+          return fn.call(context, body);
+        };
+      },
+    });
     let current: any = context.res;
     Object.defineProperty(context, 'res', {
       configurable: true,
@@ -142,6 +157,14 @@ if (process.env.VERCEL) {
     );
   });
 }
+
+hono.get('/dbgnovary', (context) =>
+  context.html('<html><body>hello novary</body></html>'),
+);
+hono.get('/dbgvary', (context) => {
+  context.header('Vary', 'X-Inertia');
+  return context.html('<html><body>hello vary</body></html>');
+});
 
 hono.get('/api-json', (context) => context.json(document));
 
