@@ -12,31 +12,7 @@ import { nodeServer } from '@ailura/nestjs-hono-adapter/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { InertiaService } from '@dudousxd/nestjs-inertia';
 import { AppModule } from './api/app.module.js';
-
-if (process.env.VERCEL) {
-  const originalRender = InertiaService.prototype.render;
-  InertiaService.prototype.render = async function (
-    this: any,
-    ...args: unknown[]
-  ) {
-    const response = this.res;
-    const originalHtml = response?.html;
-    if (typeof originalHtml === 'function') {
-      response.html = (body: unknown) => {
-        console.log(
-          '[dbg3] inertia html',
-          typeof body,
-          typeof body === 'string' ? body.length : -1,
-          typeof body === 'string' ? JSON.stringify(body.slice(0, 90)) : '',
-        );
-        return originalHtml.call(response, body);
-      };
-    }
-    return originalRender.apply(this, args as [never, never]);
-  };
-}
 
 const isServerless = Boolean(process.env.VERCEL);
 
@@ -111,61 +87,6 @@ const config = new DocumentBuilder()
 const document = SwaggerModule.createDocument(app, config);
 
 const hono = adapter.getHono();
-
-if (process.env.VERCEL) {
-  hono.use('*', async (context: any, next: () => Promise<void>) => {
-    let realSend: any;
-    Object.defineProperty(context, 'send', {
-      configurable: true,
-      get: () => realSend,
-      set: (fn: any) => {
-        realSend = (body: unknown) => {
-          console.log(
-            '[dbg6] send',
-            typeof body,
-            typeof body === 'string' ? body.length : -1,
-          );
-          return fn.call(context, body);
-        };
-      },
-    });
-    let current: any = context.res;
-    Object.defineProperty(context, 'res', {
-      configurable: true,
-      get: () => current,
-      set: (value: any) => {
-        console.log(
-          '[dbg5] res set',
-          value?.status,
-          value?.body === null ? 'null' : 'body',
-          new Error().stack?.split('\n').slice(2, 5).join(' | '),
-        );
-        current = value;
-      },
-    });
-    await next();
-    let length = -1;
-    try {
-      length = (await context.res.clone().text()).length;
-    } catch {}
-    console.log(
-      '[dbg2]',
-      context.req.path,
-      context.res.status,
-      length,
-      process.env.NODE_ENV,
-    );
-  });
-}
-
-hono.get('/dbgnovary', (context) =>
-  context.html('<html><body>hello novary</body></html>'),
-);
-hono.get('/dbgvary', (context) => {
-  context.header('Vary', 'X-Inertia');
-  return context.html('<html><body>hello vary</body></html>');
-});
-
 hono.get('/api-json', (context) => context.json(document));
 
 const scalarHandler = apiReference({
@@ -198,26 +119,4 @@ if (isServerless) {
   Logger.log(`Deneb listening on http://localhost:${port}`, 'NestApplication');
 }
 
-const loggedFetch = async (request: Request) => {
-  const response = await fetch(request);
-  if (process.env.VERCEL) {
-    let length = -1;
-    try {
-      length = (await response.clone().text()).length;
-    } catch (error) {
-      length = -2;
-      console.log('[dbg] clone failed', String(error));
-    }
-    console.log(
-      '[dbg]',
-      request.method,
-      new URL(request.url).pathname,
-      response.status,
-      response.headers.get('content-type'),
-      length,
-    );
-  }
-  return response;
-};
-
-export default { fetch: loggedFetch };
+export default { fetch };
