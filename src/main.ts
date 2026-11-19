@@ -113,6 +113,23 @@ hono.get('/api/', renderScalar);
 if (process.env.VERCEL) {
   const PATCHED = Symbol('resProbe');
   hono.use('*', async (context: any, next: () => Promise<void>) => {
+    let realSend: any;
+    Object.defineProperty(context, 'send', {
+      configurable: true,
+      get: () => realSend,
+      set: (fn: any) => {
+        realSend = (body: unknown) => {
+          console.log(
+            '[send]',
+            context.req.path,
+            typeof body,
+            typeof body === 'string' ? body.length : -1,
+            new Error().stack?.split('\n').slice(2, 12).join(' | '),
+          );
+          return fn.call(context, body);
+        };
+      },
+    });
     const proto = Object.getPrototypeOf(context);
     const descriptor = Object.getOwnPropertyDescriptor(proto, 'res');
     if (descriptor?.get && descriptor.set && !Reflect.get(proto, PATCHED)) {
