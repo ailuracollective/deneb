@@ -87,6 +87,24 @@ const config = new DocumentBuilder()
 const document = SwaggerModule.createDocument(app, config);
 
 const hono = adapter.getHono();
+
+if (process.env.VERCEL) {
+  hono.use('*', async (context: any, next: () => Promise<void>) => {
+    await next();
+    let length = -1;
+    try {
+      length = (await context.res.clone().text()).length;
+    } catch {}
+    console.log(
+      '[dbg2]',
+      context.req.path,
+      context.res.status,
+      length,
+      process.env.NODE_ENV,
+    );
+  });
+}
+
 hono.get('/api-json', (context) => context.json(document));
 
 const scalarHandler = apiReference({
