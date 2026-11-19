@@ -8,7 +8,7 @@ import {
   type NestHonoApplication,
 } from '@ailura/nestjs-hono-adapter';
 import { fetchHandler, fetchServer } from '@ailura/nestjs-hono-adapter/fetch';
-import { nodeServer } from '@ailura/nestjs-hono-adapter/node-server';
+import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
@@ -16,8 +16,9 @@ import { AppModule } from './api/app.module.js';
 
 const isServerless = Boolean(process.env.VERCEL);
 
+// The fetch transport takes no port: Vercel exports `fetch`, and only a local host listens.
 const adapter = new ServerAdapter({
-  transport: isServerless ? fetchServer({ serveStatic }) : nodeServer(),
+  transport: fetchServer({ serveStatic }),
   trustProxy: true,
 });
 
@@ -111,11 +112,11 @@ hono.get('/api/', renderScalar);
 
 const fetch = fetchHandler(hono);
 
-if (isServerless) {
-  await app.init();
-} else {
+await app.init();
+
+if (!isServerless) {
   const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
+  serve({ fetch, port });
   Logger.log(`Deneb listening on http://localhost:${port}`, 'NestApplication');
 }
 

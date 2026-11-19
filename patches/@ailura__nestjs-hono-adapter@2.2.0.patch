@@ -61,6 +61,49 @@ index cef21d05858012c5d1b6d4d933ef7665f63a1b70..819a270c490a4f8406b7124a87f2c7c3
              overrides.set(property, value);
              return true;
          }
+diff --git a/dist/core/request/request.js b/dist/core/request/request.js
+index 28b21c0dbe5dab0fa37760b80153434e51f62c56..db71328af5066df7af2ad94efa1b1f571eeb3184 100644
+--- a/dist/core/request/request.js
++++ b/dist/core/request/request.js
+@@ -48,10 +48,12 @@ class RequestBag {
+             method: undefined,
+             mount: undefined,
+             options,
++            originalUrl: undefined,
+             params: undefined,
+             paramsAt: undefined,
+             protocol: undefined,
+             query: undefined,
++            requestUrl: undefined,
+             url: undefined,
+         };
+         this.body = undefined;
+@@ -118,8 +120,11 @@ class RequestBag {
+     }
+     get originalUrl() {
+         const parts = urlPartsOf(this.state);
+-        parts.route ??= `${parts.pathname}${parts.search}`;
+-        return parts.route;
++        return this.state.originalUrl ?? (parts.route ??= `${parts.pathname}${parts.search}`);
++    }
++    // Connect middleware (e.g. Vite's bridge) mutates these fields as it strips mount prefixes.
++    set originalUrl(value) {
++        this.state.originalUrl = value;
+     }
+     get baseUrl() {
+         return this.state.mount ?? '';
+@@ -223,7 +228,10 @@ class RequestBag {
+         return tuneableSocket(incoming.socket);
+     }
+     get url() {
+-        return this.relative(this.originalUrl);
++        return this.state.requestUrl ?? this.relative(this.originalUrl);
++    }
++    set url(value) {
++        this.state.requestUrl = value;
+     }
+     mountAt(prefix) {
+         this.state.mount = prefix;
 diff --git a/src/compat/express/middleware-response.ts b/src/compat/express/middleware-response.ts
 index b08f424ec5527b33f12c6facda04e57eb2d49767..bd8bcf1478aa34d38952a197062e3b66aa293150 100644
 --- a/src/compat/express/middleware-response.ts
@@ -124,3 +167,65 @@ index 4c847a7a327ea8c789280147e0500cf446947905..8806774b65380d7a5495789328358011
        overrides.set(property, value);
        return true;
      }
+diff --git a/src/core/request/bag-state.ts b/src/core/request/bag-state.ts
+index 1baf69c944bebc5ff215a416a6adf186453397f2..ed5ae40235a30379188fcb921e44a0091308551d 100644
+--- a/src/core/request/bag-state.ts
++++ b/src/core/request/bag-state.ts
+@@ -25,10 +25,12 @@ interface BagState {
+   ip: string | undefined;
+   method: string | undefined;
+   mount: string | undefined;
++  originalUrl: string | undefined;
+   params: Record<string, string> | undefined;
+   paramsAt: number | undefined;
+   protocol: string | undefined;
+   query: ParsedQuery | undefined;
++  requestUrl: string | undefined;
+   url: UrlParts | undefined;
+ }
+ 
+diff --git a/src/core/request/request.ts b/src/core/request/request.ts
+index 45a2dc62ec989fffba47fdfda19159091b39c171..25860fd20cc66eaa1fbd06b2301cdfb6563cdaba 100644
+--- a/src/core/request/request.ts
++++ b/src/core/request/request.ts
+@@ -74,10 +74,12 @@ class RequestBag implements NestRequest {
+       method: undefined,
+       mount: undefined,
+       options,
++      originalUrl: undefined,
+       params: undefined,
+       paramsAt: undefined,
+       protocol: undefined,
+       query: undefined,
++      requestUrl: undefined,
+       url: undefined,
+     };
+     this.body = undefined;
+@@ -157,8 +159,12 @@ class RequestBag implements NestRequest {
+ 
+   public get originalUrl(): string {
+     const parts = urlPartsOf(this.state);
+-    parts.route ??= `${parts.pathname}${parts.search}`;
+-    return parts.route;
++    return this.state.originalUrl ?? (parts.route ??= `${parts.pathname}${parts.search}`);
++  }
++
++  // Connect middleware (e.g. Vite's bridge) mutates these fields as it strips mount prefixes.
++  public set originalUrl(value: string) {
++    this.state.originalUrl = value;
+   }
+ 
+   public get baseUrl(): string {
+@@ -286,7 +292,11 @@ class RequestBag implements NestRequest {
+   }
+ 
+   public get url(): string {
+-    return this.relative(this.originalUrl);
++    return this.state.requestUrl ?? this.relative(this.originalUrl);
++  }
++
++  public set url(value: string) {
++    this.state.requestUrl = value;
+   }
+ 
+   public mountAt(prefix?: string): void {
