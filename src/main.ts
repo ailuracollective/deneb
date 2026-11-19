@@ -12,7 +12,7 @@ import { nodeServer } from '@ailura/nestjs-hono-adapter/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { AppModule } from './app.module.js';
+import { AppModule } from './api/app.module.js';
 
 const isServerless = Boolean(process.env.VERCEL);
 

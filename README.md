@@ -71,8 +71,8 @@ pnpm run start:prod
 
 ```text
 src/
+├── main.ts                 # Punto de entrada y configuración HTTP/OpenAPI
 ├── api/
-│   ├── main.ts             # Punto de entrada y configuración HTTP/OpenAPI
 │   ├── app.module.ts       # Módulo raíz e integración de Inertia
 │   ├── app.controller.ts   # Página Inertia principal
 │   ├── app.service.ts      # Propiedades de la página principal
@@ -81,8 +81,6 @@ src/
     ├── app/                # Entrada del cliente, componentes y tipos
     ├── pages/Simulations/  # Consola React y sus pruebas
     └── root.html           # Plantilla raíz de Inertia
-test/
-└── app.e2e-spec.ts         # Prueba Hono/Inertia de extremo a extremo
 ```
 
 ## Despliegue
