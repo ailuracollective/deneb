@@ -1,20 +1,20 @@
 import 'reflect-metadata';
 import '@ailura/nestjs-platform-hono-inertia/register';
 
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
   ServerAdapter,
   type NestHonoApplication,
 } from '@ailura/nestjs-hono-adapter';
-import { fetchHandler, fetchServer } from '@ailura/nestjs-hono-adapter/fetch';
-import { serveStatic } from '@hono/node-server/serve-static';
+import { fetchHandler } from '@ailura/nestjs-hono-adapter/fetch';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './api/app.module.js';
+import { createTransport, isVercel } from './bootstrap.js';
 
 const adapter = new ServerAdapter({
-  transport: fetchServer({ serveStatic }),
+  transport: createTransport(),
   trustProxy: true,
 });
 
@@ -77,5 +77,11 @@ adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
   if (response?.finalized) return;
   return reply(response, body, statusCode);
 }) as typeof adapter.reply;
+
+if (!isVercel) {
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen(port);
+  Logger.log(`Deneb listening on http://localhost:${port}`, 'NestApplication');
+}
 
 export default { fetch };
