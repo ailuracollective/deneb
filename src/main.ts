@@ -191,6 +191,18 @@ const fetch = async (request: Request) => {
 
 await app.init();
 
+// The Inertia bridge installs asynchronously; when it lands late, Nest's post-render
+// `reply(undefined)` clears the page the render already wrote. Keep the guard here too.
+const reply = adapter.reply.bind(adapter);
+adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
+  if (response?.finalized) return;
+  return reply(response, body, statusCode);
+}) as typeof adapter.reply;
+
+if (process.env.VERCEL) {
+  console.log('[bridges]', String((adapter as any).reply).slice(0, 160));
+}
+
 if (!isServerless) {
   const port = Number(process.env.PORT ?? 3000);
   serve({ fetch, port });
