@@ -3,3 +3,6 @@ allowBuilds:
   '@swc/core': true
 minimumReleaseAgeExclude:
   - '@ailura/nestjs-hono-adapter@2.0.1'
+patchedDependencies:
+  '@ailura/nestjs-hono-adapter@2.2.0': patches/@ailura__nestjs-hono-adapter@2.2.0.patch
+  '@ailura/nestjs-platform-hono-inertia@0.2.0': patches/@ailura__nestjs-platform-hono-inertia@0.2.0.patch

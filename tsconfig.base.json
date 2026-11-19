@@ -1,0 +1,14 @@
+{
+  // Shared by the API and web configs. Do not put emit/runtime-specific options here.
+  "compilerOptions": {
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["./src/web/app/*"]
+    }
+  }
+}

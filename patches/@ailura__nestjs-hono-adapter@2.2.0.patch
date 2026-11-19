@@ -1,0 +1,260 @@
+diff --git a/dist/compat/express/middleware-response.js b/dist/compat/express/middleware-response.js
+index 54b67a33fa893c01357e7a6af3108e8d6f785d62..6f7611218c98bb797731e4578b835dbeaedf0df4 100644
+--- a/dist/compat/express/middleware-response.js
++++ b/dist/compat/express/middleware-response.js
+@@ -2,6 +2,14 @@ import { attach, bytesOf, writeBody } from './response-body.js';
+ import { headerValue, setHeaderValue } from './surface-extras.js';
+ import { isCallable, proxyHandler } from './proxy-handler.js';
+ import { writer } from './surface.js';
++// A stream piping into the Express surface calls `emit`; the transport owns the real listeners.
++const emit = (context, event, ...args) => {
++    const { outgoing } = context.env;
++    return outgoing === undefined ? false : outgoing.emit(event, ...args);
++};
++const streamReaders = (context) => ({
++    emit: (event, ...args) => emit(context, event, ...args),
++});
+ const headerReaders = (context, locals, writeHead) => {
+     const chunks = [];
+     let ended = false;
+@@ -14,9 +22,7 @@ const headerReaders = (context, locals, writeHead) => {
+             if (ended)
+                 return;
+             ended = true;
+-            if (body !== undefined)
+-                chunks.push(bytesOf(body));
+-            writeBody(context, chunks);
++            writeBody(context, body === undefined ? chunks : [...chunks, bytesOf(body)]);
+         },
+         getHeader: (name) => headerValue(context, name),
+         hasHeader: (name) => context.res.headers.has(name),
+@@ -60,7 +66,7 @@ const middlewareResponse = (context) => {
+     // Built on first read: a middleware that only touches the request (method spoofing) never pays
+     // for the sixteen response members, and one that reads a fitted member skips them too.
+     let readers = undefined;
+-    const readersOf = () => (readers ??= headerReaders(context, {}, writeHead));
++    const readersOf = () => (readers ??= Object.assign(streamReaders(context), headerReaders(context, {}, writeHead)));
+     const handler = proxyHandler(context, overrides, readersOf);
+     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the proxy layers Express response semantics onto the Hono context.
+     const target = context;
+diff --git a/dist/compat/express/proxy-handler.js b/dist/compat/express/proxy-handler.js
+index cef21d05858012c5d1b6d4d933ef7665f63a1b70..819a270c490a4f8406b7124a87f2c7c3a5184bd9 100644
+--- a/dist/compat/express/proxy-handler.js
++++ b/dist/compat/express/proxy-handler.js
+@@ -9,6 +9,10 @@ const proxyHandler = (context, overrides, readersOf) => ({
+             return undefined;
+         if (overrides.has(property))
+             return overrides.get(property);
++        // Bridges fit `end` to settle their own response, but a Node-style middleware still streams
++        // through the Express reader, which collects what `write` left and answers with it.
++        if (property === 'end' && Object.hasOwn(readersOf(), property))
++            return readersOf()[property];
+         // A fitted member wins, so a request that only reads it builds no readers at all.
+         if (Object.hasOwn(target, property))
+             return Reflect.get(target, property);
+@@ -30,7 +34,7 @@ const proxyHandler = (context, overrides, readersOf) => ({
+     set(target, property, value) {
+         if (typeof property !== 'string')
+             return Reflect.set(target, property, value);
+-        if (property === 'writeHead') {
++        if (property === 'writeHead' || property === 'end') {
+             overrides.set(property, value);
+             return true;
+         }
+diff --git a/dist/core/request/request.js b/dist/core/request/request.js
+index 28b21c0dbe5dab0fa37760b80153434e51f62c56..db71328af5066df7af2ad94efa1b1f571eeb3184 100644
+--- a/dist/core/request/request.js
++++ b/dist/core/request/request.js
+@@ -48,10 +48,12 @@ class RequestBag {
+             method: undefined,
+             mount: undefined,
+             options,
++            originalUrl: undefined,
+             params: undefined,
+             paramsAt: undefined,
+             protocol: undefined,
+             query: undefined,
++            requestUrl: undefined,
+             url: undefined,
+         };
+         this.body = undefined;
+@@ -118,8 +120,11 @@ class RequestBag {
+     }
+     get originalUrl() {
+         const parts = urlPartsOf(this.state);
+-        parts.route ??= `${parts.pathname}${parts.search}`;
+-        return parts.route;
++        return this.state.originalUrl ?? (parts.route ??= `${parts.pathname}${parts.search}`);
++    }
++    // Connect middleware (e.g. Vite's bridge) mutates these fields as it strips mount prefixes.
++    set originalUrl(value) {
++        this.state.originalUrl = value;
+     }
+     get baseUrl() {
+         return this.state.mount ?? '';
+@@ -223,7 +228,10 @@ class RequestBag {
+         return tuneableSocket(incoming.socket);
+     }
+     get url() {
+-        return this.relative(this.originalUrl);
++        return this.state.requestUrl ?? this.relative(this.originalUrl);
++    }
++    set url(value) {
++        this.state.requestUrl = value;
+     }
+     mountAt(prefix) {
+         this.state.mount = prefix;
+diff --git a/dist/core/response/response-writer.js b/dist/core/response/response-writer.js
+index 3d6b65f00d3b2c69d2e1388c455a143b25757e00..4fbe35a6393e6b7a1f1904e19f0334e6a54fd1e5 100644
+--- a/dist/core/response/response-writer.js
++++ b/dist/core/response/response-writer.js
+@@ -48,6 +48,10 @@ class ResponseWriter {
+         return response.finalized;
+     }
+     answer(response, body, status) {
++        // Nest's post-handler reply must not clear a page the handler already wrote, the way Express
++        // ignores a write once the headers are sent.
++        if (response.finalized)
++            return;
+         const tag = this.tagOf(response, body, status);
+         if (tag === undefined) {
+             response.res = buildResponse(response, body, status);
+diff --git a/src/compat/express/middleware-response.ts b/src/compat/express/middleware-response.ts
+index b08f424ec5527b33f12c6facda04e57eb2d49767..bd8bcf1478aa34d38952a197062e3b66aa293150 100644
+--- a/src/compat/express/middleware-response.ts
++++ b/src/compat/express/middleware-response.ts
+@@ -9,6 +9,16 @@ interface MiddlewareResponse {
+   readonly proxy: NestContext;
+ }
+ 
++// A stream piping into the Express surface calls `emit`; the transport owns the real listeners.
++const emit = (context: NestContext, event: string, ...args: unknown[]): boolean => {
++  const { outgoing } = context.env;
++  return outgoing === undefined ? false : outgoing.emit(event, ...args);
++};
++
++const streamReaders = (context: NestContext): Record<string, unknown> => ({
++  emit: (event: string, ...args: unknown[]): boolean => emit(context, event, ...args),
++});
++
+ const headerReaders = (
+   context: NestContext,
+   locals: Record<string, unknown>,
+@@ -25,8 +35,7 @@ const headerReaders = (
+     end: (body?: unknown): void => {
+       if (ended) return;
+       ended = true;
+-      if (body !== undefined) chunks.push(bytesOf(body));
+-      writeBody(context, chunks);
++      writeBody(context, body === undefined ? chunks : [...chunks, bytesOf(body)]);
+     },
+     getHeader: (name: string): string | readonly string[] | undefined => headerValue(context, name),
+     hasHeader: (name: string): boolean => context.res.headers.has(name),
+@@ -75,7 +84,7 @@ const middlewareResponse = (context: NestContext): MiddlewareResponse => {
+   // for the sixteen response members, and one that reads a fitted member skips them too.
+   let readers: Record<string, unknown> | undefined = undefined;
+   const readersOf = (): Record<string, unknown> =>
+-    (readers ??= headerReaders(context, {}, writeHead));
++    (readers ??= Object.assign(streamReaders(context), headerReaders(context, {}, writeHead)));
+   const handler = proxyHandler(context, overrides, readersOf);
+   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the proxy layers Express response semantics onto the Hono context.
+   const target = context as unknown as Record<string, unknown>;
+diff --git a/src/compat/express/proxy-handler.ts b/src/compat/express/proxy-handler.ts
+index 4c847a7a327ea8c789280147e0500cf446947905..8806774b65380d7a5495789328358011b43dad58 100644
+--- a/src/compat/express/proxy-handler.ts
++++ b/src/compat/express/proxy-handler.ts
+@@ -15,6 +15,9 @@ const proxyHandler = (
+     if (typeof property !== 'string') return Reflect.get(target, property);
+     if (property === HIDDEN) return undefined;
+     if (overrides.has(property)) return overrides.get(property);
++    // Bridges fit `end` to settle their own response, but a Node-style middleware still streams
++    // through the Express reader, which collects what `write` left and answers with it.
++    if (property === 'end' && Object.hasOwn(readersOf(), property)) return readersOf()[property];
+     // A fitted member wins, so a request that only reads it builds no readers at all.
+     if (Object.hasOwn(target, property)) return Reflect.get(target, property);
+     const readers = readersOf();
+@@ -31,7 +34,7 @@ const proxyHandler = (
+   },
+   set(target, property, value): boolean {
+     if (typeof property !== 'string') return Reflect.set(target, property, value);
+-    if (property === 'writeHead') {
++    if (property === 'writeHead' || property === 'end') {
+       overrides.set(property, value);
+       return true;
+     }
+diff --git a/src/core/request/bag-state.ts b/src/core/request/bag-state.ts
+index 1baf69c944bebc5ff215a416a6adf186453397f2..ed5ae40235a30379188fcb921e44a0091308551d 100644
+--- a/src/core/request/bag-state.ts
++++ b/src/core/request/bag-state.ts
+@@ -25,10 +25,12 @@ interface BagState {
+   ip: string | undefined;
+   method: string | undefined;
+   mount: string | undefined;
++  originalUrl: string | undefined;
+   params: Record<string, string> | undefined;
+   paramsAt: number | undefined;
+   protocol: string | undefined;
+   query: ParsedQuery | undefined;
++  requestUrl: string | undefined;
+   url: UrlParts | undefined;
+ }
+ 
+diff --git a/src/core/request/request.ts b/src/core/request/request.ts
+index 45a2dc62ec989fffba47fdfda19159091b39c171..25860fd20cc66eaa1fbd06b2301cdfb6563cdaba 100644
+--- a/src/core/request/request.ts
++++ b/src/core/request/request.ts
+@@ -74,10 +74,12 @@ class RequestBag implements NestRequest {
+       method: undefined,
+       mount: undefined,
+       options,
++      originalUrl: undefined,
+       params: undefined,
+       paramsAt: undefined,
+       protocol: undefined,
+       query: undefined,
++      requestUrl: undefined,
+       url: undefined,
+     };
+     this.body = undefined;
+@@ -157,8 +159,12 @@ class RequestBag implements NestRequest {
+ 
+   public get originalUrl(): string {
+     const parts = urlPartsOf(this.state);
+-    parts.route ??= `${parts.pathname}${parts.search}`;
+-    return parts.route;
++    return this.state.originalUrl ?? (parts.route ??= `${parts.pathname}${parts.search}`);
++  }
++
++  // Connect middleware (e.g. Vite's bridge) mutates these fields as it strips mount prefixes.
++  public set originalUrl(value: string) {
++    this.state.originalUrl = value;
+   }
+ 
+   public get baseUrl(): string {
+@@ -286,7 +292,11 @@ class RequestBag implements NestRequest {
+   }
+ 
+   public get url(): string {
+-    return this.relative(this.originalUrl);
++    return this.state.requestUrl ?? this.relative(this.originalUrl);
++  }
++
++  public set url(value: string) {
++    this.state.requestUrl = value;
+   }
+ 
+   public mountAt(prefix?: string): void {
+diff --git a/src/core/response/response-writer.ts b/src/core/response/response-writer.ts
+index 0064c5ee615f184bfe5b5a799b1620bb42664101..9fcd90fe998dbcd56889c0c2aca0868cd0e73213 100644
+--- a/src/core/response/response-writer.ts
++++ b/src/core/response/response-writer.ts
+@@ -71,6 +71,9 @@ class ResponseWriter {
+   }
+ 
+   private answer(response: NestContext, body: unknown, status: number): void {
++    // Nest's post-handler reply must not clear a page the handler already wrote, the way Express
++    // ignores a write once the headers are sent.
++    if (response.finalized) return;
+     const tag = this.tagOf(response, body, status);
+     if (tag === undefined) {
+       response.res = buildResponse(response, body, status);

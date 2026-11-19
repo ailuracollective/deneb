@@ -1,0 +1,9 @@
+{
+  // NestJS API build: emits src/ only. Used by nest build via nest-cli.json.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/api", "src/main.ts", "src/bootstrap.ts"],
+  "exclude": ["node_modules", "test", "dist", "src/web", "**/*spec.ts"]
+}
