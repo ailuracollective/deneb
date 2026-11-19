@@ -104,6 +104,21 @@ index 28b21c0dbe5dab0fa37760b80153434e51f62c56..db71328af5066df7af2ad94efa1b1f57
      }
      mountAt(prefix) {
          this.state.mount = prefix;
+diff --git a/dist/core/response/response-writer.js b/dist/core/response/response-writer.js
+index 3d6b65f00d3b2c69d2e1388c455a143b25757e00..4fbe35a6393e6b7a1f1904e19f0334e6a54fd1e5 100644
+--- a/dist/core/response/response-writer.js
++++ b/dist/core/response/response-writer.js
+@@ -48,6 +48,10 @@ class ResponseWriter {
+         return response.finalized;
+     }
+     answer(response, body, status) {
++        // Nest's post-handler reply must not clear a page the handler already wrote, the way Express
++        // ignores a write once the headers are sent.
++        if (response.finalized)
++            return;
+         const tag = this.tagOf(response, body, status);
+         if (tag === undefined) {
+             response.res = buildResponse(response, body, status);
 diff --git a/src/compat/express/middleware-response.ts b/src/compat/express/middleware-response.ts
 index b08f424ec5527b33f12c6facda04e57eb2d49767..bd8bcf1478aa34d38952a197062e3b66aa293150 100644
 --- a/src/compat/express/middleware-response.ts
@@ -229,3 +244,17 @@ index 45a2dc62ec989fffba47fdfda19159091b39c171..25860fd20cc66eaa1fbd06b2301cdfb6
    }
  
    public mountAt(prefix?: string): void {
+diff --git a/src/core/response/response-writer.ts b/src/core/response/response-writer.ts
+index 0064c5ee615f184bfe5b5a799b1620bb42664101..9fcd90fe998dbcd56889c0c2aca0868cd0e73213 100644
+--- a/src/core/response/response-writer.ts
++++ b/src/core/response/response-writer.ts
+@@ -71,6 +71,9 @@ class ResponseWriter {
+   }
+ 
+   private answer(response: NestContext, body: unknown, status: number): void {
++    // Nest's post-handler reply must not clear a page the handler already wrote, the way Express
++    // ignores a write once the headers are sent.
++    if (response.finalized) return;
+     const tag = this.tagOf(response, body, status);
+     if (tag === undefined) {
+       response.res = buildResponse(response, body, status);

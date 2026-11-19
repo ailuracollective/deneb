@@ -50,14 +50,6 @@ const fetch = fetchHandler(hono);
 
 await app.init();
 
-// The Inertia bridge installs asynchronously; when it lands late, Nest's post-render
-// `reply(undefined)` clears the page the render already wrote. Keep the guard here too.
-const reply = adapter.reply.bind(adapter);
-adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
-  if (response?.finalized) return;
-  return reply(response, body, statusCode);
-}) as typeof adapter.reply;
-
 if (!isVercel) {
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
