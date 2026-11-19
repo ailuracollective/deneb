@@ -123,9 +123,10 @@ if (process.env.VERCEL) {
         set(this: unknown, value: Response | undefined) {
           console.log(
             '[resset]',
+            context.req.path,
             value?.status,
             value?.body === null ? 'null' : 'body',
-            new Error().stack?.split('\n').slice(2, 4).join(' | '),
+            new Error().stack?.split('\n').slice(2, 12).join(' | '),
           );
           descriptor.set?.call(this, value);
         },
