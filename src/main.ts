@@ -114,6 +114,20 @@ const hono = adapter.getHono();
 
 if (process.env.VERCEL) {
   hono.use('*', async (context: any, next: () => Promise<void>) => {
+    let current: any = context.res;
+    Object.defineProperty(context, 'res', {
+      configurable: true,
+      get: () => current,
+      set: (value: any) => {
+        console.log(
+          '[dbg5] res set',
+          value?.status,
+          value?.body === null ? 'null' : 'body',
+          new Error().stack?.split('\n').slice(2, 5).join(' | '),
+        );
+        current = value;
+      },
+    });
     await next();
     let length = -1;
     try {
