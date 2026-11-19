@@ -111,6 +111,18 @@ hono.get('/api', renderScalar);
 hono.get('/api/', renderScalar);
 
 if (process.env.VERCEL) {
+  const originalReply = adapter.reply.bind(adapter);
+  adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
+    console.log(
+      '[reply]',
+      response?.req?.path,
+      response?.finalized,
+      typeof body,
+      statusCode,
+      new Error().stack?.split('\n').slice(2, 10).join(' | '),
+    );
+    return originalReply(response, body, statusCode);
+  }) as typeof adapter.reply;
   const PATCHED = Symbol('resProbe');
   hono.use('*', async (context: any, next: () => Promise<void>) => {
     let realSend: any;
