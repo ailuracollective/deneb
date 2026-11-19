@@ -110,84 +110,7 @@ const renderScalar = (context: any) => {
 hono.get('/api', renderScalar);
 hono.get('/api/', renderScalar);
 
-let probeSeq = 0;
-
-if (process.env.VERCEL) {
-  const originalReply = adapter.reply.bind(adapter);
-  adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
-    console.log(
-      '[reply]',
-      probeSeq++,
-      response?.req?.path,
-      response?.finalized,
-      typeof body,
-      statusCode,
-      new Error().stack?.split('\n').slice(2, 10).join(' | '),
-    );
-    return originalReply(response, body, statusCode);
-  }) as typeof adapter.reply;
-  const PATCHED = Symbol('resProbe');
-  hono.use('*', async (context: any, next: () => Promise<void>) => {
-    let realSend: any;
-    Object.defineProperty(context, 'send', {
-      configurable: true,
-      get: () => realSend,
-      set: (fn: any) => {
-        realSend = (body: unknown) => {
-          console.log(
-            '[send]',
-            probeSeq++,
-            context.req.path,
-            typeof body,
-            typeof body === 'string' ? body.length : -1,
-            new Error().stack?.split('\n').slice(2, 12).join(' | '),
-          );
-          return fn.call(context, body);
-        };
-      },
-    });
-    const proto = Object.getPrototypeOf(context);
-    const descriptor = Object.getOwnPropertyDescriptor(proto, 'res');
-    if (descriptor?.get && descriptor.set && !Reflect.get(proto, PATCHED)) {
-      Reflect.set(proto, PATCHED, true);
-      Object.defineProperty(proto, 'res', {
-        configurable: true,
-        get: descriptor.get,
-        set(this: unknown, value: Response | undefined) {
-          console.log(
-            '[resset]',
-            probeSeq++,
-            context.req.path,
-            value?.status,
-            value?.body === null ? 'null' : 'body',
-            new Error().stack?.split('\n').slice(2, 12).join(' | '),
-          );
-          descriptor.set?.call(this, value);
-        },
-      });
-    }
-    await next();
-  });
-}
-
-const baseFetch = fetchHandler(hono);
-
-const fetch = async (request: Request) => {
-  const response = await baseFetch(request);
-  if (process.env.VERCEL) {
-    const body = await response.clone().text();
-    console.log(
-      '[final]',
-      probeSeq++,
-      new URL(request.url).pathname,
-      response.status,
-      body.length,
-      response.headers.get('content-type'),
-      response.headers.get('vary'),
-    );
-  }
-  return response;
-};
+const fetch = fetchHandler(hono);
 
 await app.init();
 
@@ -198,10 +121,6 @@ adapter.reply = ((response: any, body: unknown, statusCode?: number) => {
   if (response?.finalized) return;
   return reply(response, body, statusCode);
 }) as typeof adapter.reply;
-
-if (process.env.VERCEL) {
-  console.log('[bridges]', String((adapter as any).reply).slice(0, 160));
-}
 
 if (!isServerless) {
   const port = Number(process.env.PORT ?? 3000);
