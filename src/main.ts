@@ -12,7 +12,31 @@ import { nodeServer } from '@ailura/nestjs-hono-adapter/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import { InertiaService } from '@dudousxd/nestjs-inertia';
 import { AppModule } from './api/app.module.js';
+
+if (process.env.VERCEL) {
+  const originalRender = InertiaService.prototype.render;
+  InertiaService.prototype.render = async function (
+    this: any,
+    ...args: unknown[]
+  ) {
+    const response = this.res;
+    const originalHtml = response?.html;
+    if (typeof originalHtml === 'function') {
+      response.html = (body: unknown) => {
+        console.log(
+          '[dbg3] inertia html',
+          typeof body,
+          typeof body === 'string' ? body.length : -1,
+          typeof body === 'string' ? JSON.stringify(body.slice(0, 90)) : '',
+        );
+        return originalHtml.call(response, body);
+      };
+    }
+    return originalRender.apply(this, args as [never, never]);
+  };
+}
 
 const isServerless = Boolean(process.env.VERCEL);
 
