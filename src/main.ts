@@ -119,4 +119,26 @@ if (isServerless) {
   Logger.log(`Deneb listening on http://localhost:${port}`, 'NestApplication');
 }
 
-export default { fetch };
+const loggedFetch = async (request: Request) => {
+  const response = await fetch(request);
+  if (process.env.VERCEL) {
+    let length = -1;
+    try {
+      length = (await response.clone().text()).length;
+    } catch (error) {
+      length = -2;
+      console.log('[dbg] clone failed', String(error));
+    }
+    console.log(
+      '[dbg]',
+      request.method,
+      new URL(request.url).pathname,
+      response.status,
+      response.headers.get('content-type'),
+      length,
+    );
+  }
+  return response;
+};
+
+export default { fetch: loggedFetch };
