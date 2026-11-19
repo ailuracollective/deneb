@@ -162,20 +162,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@ailura/nestjs-hono-adapter@2.2.0': 63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72
-  '@ailura/nestjs-platform-hono-inertia@0.2.0': 43fc48940871c88f043def2f3ec65a60764bafb15c9140acc9e2c2d88ddbb415
-
 importers:
 
   .:
     dependencies:
       '@ailura/nestjs-hono-adapter':
-        specifier: ^2.2.0
-        version: 2.2.0(patch_hash=63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72)(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)
+        specifier: github:ailuracollective/nestjs-hono-adapter#04094394c297bfda3fe4eeb7906a6671d07ba713&path:packages/core
+        version: https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)
       '@ailura/nestjs-platform-hono-inertia':
-        specifier: ^0.2.0
-        version: 0.2.0(patch_hash=43fc48940871c88f043def2f3ec65a60764bafb15c9140acc9e2c2d88ddbb415)(@ailura/nestjs-hono-adapter@2.2.0(patch_hash=63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72)(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2))(@dudousxd/nestjs-inertia@3.0.1(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(handlebars@4.7.10)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+        specifier: github:ailuracollective/nestjs-hono-adapter#04094394c297bfda3fe4eeb7906a6671d07ba713&path:packages/inertia
+        version: https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/inertia(@ailura/nestjs-hono-adapter@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2))(@dudousxd/nestjs-inertia@3.0.1(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(handlebars@4.7.10)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
       '@base-ui/react':
         specifier: ^1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -363,8 +359,9 @@ importers:
 
 packages:
 
-  '@ailura/nestjs-hono-adapter@2.2.0':
-    resolution: {integrity: sha512-fpAHiMh1kkl9zgaAPThWSb5fL74OyFk6aNEsm9oYrfD6DdXLcKrjSslAb581MBJkWa3+zoTJKSE3MBD3AM28ag==}
+  '@ailura/nestjs-hono-adapter@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core':
+    resolution: {gitHosted: true, integrity: sha512-yp1v8uuAhjfnaPJlhd2TOJHzGrKIEAC8wfFKPxa/KTFYesYtglxjBUE941K5EA41Ed7B9WyTKKsAORDZr5R5TA==, path: packages/core, tarball: https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713}
+    version: 2.2.0
     engines: {node: '>=22.12.0'}
     peerDependencies:
       '@hono/node-server': ^2.1.1
@@ -376,8 +373,9 @@ packages:
       '@hono/node-server':
         optional: true
 
-  '@ailura/nestjs-platform-hono-inertia@0.2.0':
-    resolution: {integrity: sha512-Qbl4nZRdpUYqPi7w4RrVerpSOOBFWxgjXbN2vM7nSeWr9ic+Db1lGNSyqptn5MTjOAH9miyI5q+SAsjCqkoK3g==}
+  '@ailura/nestjs-platform-hono-inertia@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/inertia':
+    resolution: {gitHosted: true, integrity: sha512-yp1v8uuAhjfnaPJlhd2TOJHzGrKIEAC8wfFKPxa/KTFYesYtglxjBUE941K5EA41Ed7B9WyTKKsAORDZr5R5TA==, path: packages/inertia, tarball: https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713}
+    version: 0.2.0
     engines: {node: '>=22.12.0'}
     peerDependencies:
       '@ailura/nestjs-hono-adapter': '>=2 <3'
@@ -4566,7 +4564,7 @@ packages:
 
 snapshots:
 
-  '@ailura/nestjs-hono-adapter@2.2.0(patch_hash=63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72)(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)':
+  '@ailura/nestjs-hono-adapter@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/core': 12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -4575,9 +4573,9 @@ snapshots:
     optionalDependencies:
       '@hono/node-server': 2.1.5(hono@4.13.13)
 
-  ? '@ailura/nestjs-platform-hono-inertia@0.2.0(patch_hash=43fc48940871c88f043def2f3ec65a60764bafb15c9140acc9e2c2d88ddbb415)(@ailura/nestjs-hono-adapter@2.2.0(patch_hash=63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72)(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2))(@dudousxd/nestjs-inertia@3.0.1(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(handlebars@4.7.10)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)'
+  ? '@ailura/nestjs-platform-hono-inertia@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/inertia(@ailura/nestjs-hono-adapter@https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2))(@dudousxd/nestjs-inertia@3.0.1(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(handlebars@4.7.10)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)'
   : dependencies:
-      '@ailura/nestjs-hono-adapter': 2.2.0(patch_hash=63806f675ee1a4be0b8ee3aeab4a42efd998b1e55256e7f51f6c3d3e0bcd7e72)(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)
+      '@ailura/nestjs-hono-adapter': https://codeload.github.com/ailuracollective/nestjs-hono-adapter/tar.gz/04094394c297bfda3fe4eeb7906a6671d07ba713#path:packages/core(@hono/node-server@2.1.5(hono@4.13.13))(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(hono@4.13.13)(rxjs@7.8.2)
       rxjs: 7.8.2
     optionalDependencies:
       '@dudousxd/nestjs-inertia': 3.0.1(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.1.3(@nestjs/common@12.1.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(handlebars@4.7.10)(reflect-metadata@0.2.2)(rxjs@7.8.2)
