@@ -110,7 +110,23 @@ const renderScalar = (context: any) => {
 hono.get('/api', renderScalar);
 hono.get('/api/', renderScalar);
 
-const fetch = fetchHandler(hono);
+const baseFetch = fetchHandler(hono);
+
+const fetch = async (request: Request) => {
+  const response = await baseFetch(request);
+  if (process.env.VERCEL) {
+    const body = await response.clone().text();
+    console.log(
+      '[final]',
+      new URL(request.url).pathname,
+      response.status,
+      body.length,
+      response.headers.get('content-type'),
+      response.headers.get('vary'),
+    );
+  }
+  return response;
+};
 
 await app.init();
 
