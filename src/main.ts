@@ -15,8 +15,6 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './api/app.module.js';
 
 const isServerless = Boolean(process.env.VERCEL);
-// Vercel copies dist/ contents to the function root; locally they stay under dist/.
-const dist = isServerless ? '' : 'dist/';
 
 const adapter = new ServerAdapter({
   transport: isServerless ? fetchServer({ serveStatic }) : nodeServer(),
@@ -66,7 +64,7 @@ if (!isServerless && process.env.NODE_ENV !== 'production') {
 }
 
 app.enableCors();
-app.useStaticAssets(`${dist}inertia/client/assets`, {
+app.useStaticAssets('dist/inertia/client/assets', {
   prefix: '/assets',
 });
 app.useGlobalPipes(
